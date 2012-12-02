@@ -284,7 +284,7 @@ void loop()
     if (msgTime > 0)
     {
       // fetch the string from EEPROM
-      readEepromBlock(slot);      
+      readEepromBlock(msgNum);      
       // clear the lcd
       lcd.clear();
       // display it on the lcd
@@ -417,7 +417,7 @@ void displayProgram()
     msgTime = msgTimes[slot];
     // clear the string in RAM
     sprintf(currentString, "");
-    readEepromBlock(slot);
+    readEepromBlock(msgNum);
     Serial.print(slot, DEC);
     Serial.print(":");
     Serial.print(msgNum, DEC);
@@ -538,7 +538,7 @@ void editProgram()
     inputBad = 1;
     
      // fetch the string from EEPROM
-    readEepromBlock(slot);
+    readEepromBlock(msgNum);
 
     // print the string to serial
     Serial.println(F("Message "));   
@@ -596,6 +596,7 @@ void editProgram()
         {
           loopFlag = 0;
           Serial.println(menuChar);
+          Serial.flush();
         }
       }
     }
@@ -619,7 +620,7 @@ void editString()
   // input valid flag
   byte inputBad = 1;  
   // slot number
-  int slot;
+  int msgNum;
   // track when string is done
   byte stringDone = 0;
   
@@ -638,7 +639,7 @@ void editString()
     Serial.print(MAX_SIZE - 1, DEC);
     Serial.println(F(" characters."));
     Serial.println(F("-------------------------"));
-    Serial.print(F("Choose a slot 0 to "));
+    Serial.print(F("Choose a message 0 to "));
     Serial.println(NUM_STRINGS - 1, DEC);
     Serial.println(F(" or enter "));
     Serial.print(NUM_STRINGS);
@@ -652,22 +653,22 @@ void editString()
     // set the string index to 0 each time through the loop
     cCount = 0;
     
-    Serial.print(F("Enter the number of the slot to edit: "));
+    Serial.print(F("Enter the number of the message to edit: "));
     Serial.println();
     // loop until the input is acceptable
     while (inputBad)
     {
-      slot = getSerialInt();
+      msgNum = getSerialInt();
       // slots 0 to NUM_STRINGS
       // 0 is ok as it means exit
-      if ((slot >= 0) && (slot <= NUM_STRINGS))
+      if ((msgNum >= 0) && (msgNum <= NUM_STRINGS))
       {
         inputBad = 0;
       }
       else
       {
-        Serial.print(F("Error: slot "));
-        Serial.print(slot);
+        Serial.print(F("Error: message "));
+        Serial.print(msgNum);
         Serial.println(F(" is out of range. Try again."));
       }   
     }
@@ -675,18 +676,18 @@ void editString()
     inputBad = 1;
     
     // the user wants to edit a slot
-    if (slot < NUM_STRINGS)
+    if (msgNum < NUM_STRINGS)
     {
       // show the choice since no echo
-      Serial.print(F("Slot: "));
-      Serial.println(slot);
+      Serial.print(F("Message: "));
+      Serial.println(msgNum);
       Serial.flush();
       // get the string for currentString
       getSerialString();    
       // reset string done flag
       stringDone = 0;
       // write the string to the EEPROM
-      writeEepromBlock(slot);
+      writeEepromBlock(msgNum);
       // display the string
       Serial.println();
       Serial.println(F("You entered: "));
@@ -816,8 +817,8 @@ void getSerialString()
         {
           currentString[cCount] = 0;
           cCount--;
-          // print a delete to the screen so things get deleted
-          Serial.write(127);
+          // print a backspace to the screen so things get deleted
+          Serial.write(8);
         }
       }
       // we reached MAX_SIZE
